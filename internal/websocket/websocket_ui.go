@@ -40,6 +40,9 @@ func NewWebSocketServer(port int) *WebSocketServer {
 
 // Start begins the WebSocket server
 func (s *WebSocketServer) Start() error {
+	// Start the message broadcaster in a goroutine
+	go s.broadcastMessages()
+
 	// Set up HTTP handler for the WebSocket endpoint
 	http.HandleFunc("/ws", s.handleWebSocket)
 
@@ -61,6 +64,11 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 	}
 	defer conn.Close()
 
+	// Register the new connection
+	connMutex.Lock()
+	connections[conn] = true
+	connMutex.Unlock()
+
 	// Log the new connection
 	fmt.Println("New WebSocket connection established")
 
@@ -70,25 +78,64 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		log.Printf("Error sending message: %v", err)
 		return
 	}
+	// Handle incoming messages in a goroutine
+	go handleConnection(conn)
 
-	// Simple message reading loop
+}
+
+// handleConnection manages a single WebSocket connection
+func handleConnection(conn *websocket.Conn) {
+	defer func() {
+		removeConnection(conn)
+		conn.Close()
+	}()
+
 	for {
-		messageType, message, err := conn.ReadMessage()
+		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Printf("Error reading message: %v", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("Error reading message: %v", err)
+			}
 			break
 		}
-
-		// Log the received message
 		log.Printf("Received message: %s", message)
 
-		// Echo the message back to the client
-		err = conn.WriteMessage(messageType, message)
+		// Echo the message back
+		err = conn.WriteMessage(websocket.TextMessage, message)
 		if err != nil {
 			log.Printf("Error sending message: %v", err)
 			break
 		}
 	}
+}
+
+// removeConnection safely removes a connection from the registry
+func removeConnection(conn *websocket.Conn) {
+	connMutex.Lock()
+	delete(connections, conn)
+	connMutex.Unlock()
+	log.Println("WebSocket connection closed")
+}
+
+// broadcastMessages sends messages from the buffer to all connected clients
+func (s *WebSocketServer) broadcastMessages() {
+	for message := range messageBuffer {
+		connMutex.Lock()
+		for conn := range connections {
+			err := conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Printf("Error broadcasting message: %v", err)
+				conn.Close()
+				delete(connections, conn)
+			}
+		}
+		connMutex.Unlock()
+	}
+}
+
+// BroadcastMessage sends a message to all connected WebSocket clients
+func BroadcastMessage(message []byte) {
+	messageBuffer <- message
 }
 
 func StartWebSocketServer() {
