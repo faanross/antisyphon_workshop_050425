@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -17,6 +18,13 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 }
+
+// Global connection registry to track all active connections
+var (
+	connections   = make(map[*websocket.Conn]bool)
+	connMutex     = sync.Mutex{}
+	messageBuffer = make(chan []byte, 100) // Buffer for messages to be sent
+)
 
 // WebSocketServer represents a simple WebSocket server
 type WebSocketServer struct {
