@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 // ListenerFactory creates and manages HTTP listeners
@@ -18,9 +19,10 @@ func NewListenerFactory() *ListenerFactory {
 
 // Listener represents an HTTP server instance
 type Listener struct {
-	ID     string
-	Port   string
-	Router *chi.Mux
+	ID        string
+	Port      string
+	Router    *chi.Mux
+	CreatedAt time.Time
 }
 
 // CreateListener generates a new listener with a random port and unique ID
@@ -35,9 +37,10 @@ func (f *ListenerFactory) CreateListener(port string) (*Listener, error) {
 	fmt.Printf("|CREATE| Listener %s serving on %s\n", id, port)
 
 	return &Listener{
-		ID:     id,
-		Port:   port,
-		Router: r,
+		ID:        id,
+		Port:      port,
+		Router:    r,
+		CreatedAt: time.Now(),
 	}, nil
 }
 
