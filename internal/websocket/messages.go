@@ -1,4 +1,3 @@
-// websocket/messages.go
 package websocket
 
 import (
@@ -12,7 +11,6 @@ import (
 type MessageType string
 
 const (
-	// Message types
 	TypeListenerCreated MessageType = "listener_created"
 	TypeListenerStatus  MessageType = "listener_status"
 )
