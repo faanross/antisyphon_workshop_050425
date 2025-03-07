@@ -4,47 +4,16 @@
 
     <!-- Hidden persistent WebSocket connection -->
     <div style="display: none;">
-      <WebSocketConnection ref="wsConnection" @status-change="updateStatus" @message-received="addMessage"/>
+      <WebSocketConnection ref="wsConnection" @status-change="updateStatus"/>
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="tabs-container">
-      <div class="tabs">
-        <button
-            :class="{ active: activeTab === 'status' }"
-            @click="activeTab = 'status'"
-        >
-          Status
-        </button>
-        <button
-            :class="{ active: activeTab === 'listeners' }"
-            @click="activeTab = 'listeners'"
-        >
-          Listeners
-        </button>
-      </div>
-      <div class="tab-line"></div>
+    <!-- Connection Status -->
+    <div class="status" :class="{ connected: isConnected }">
+      WebSocket Status: {{ connectionStatus }}
     </div>
 
-    <!-- Tab Content -->
-    <div class="tab-content">
-      <!-- Status Tab - Now just shows connection status info, not the component itself -->
-      <div v-if="activeTab === 'status'" class="tab-pane">
-        <div class="status" :class="{ connected: isConnected }">
-          WebSocket Status: {{ connectionStatus }}
-        </div>
-        <div v-if="messages.length > 0" class="messages">
-          <ul>
-            <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Listeners Tab -->
-      <div v-if="activeTab === 'listeners'" class="tab-pane">
-        <ListenersTable/>
-      </div>
-    </div>
+    <!-- Listeners Table -->
+    <ListenersTable/>
   </div>
 </template>
 
@@ -53,18 +22,14 @@ import {ref, provide, onMounted} from 'vue';
 import WebSocketConnection from './components/WebSocketConnection.vue';
 import ListenersTable from './components/ListenersTable.vue';
 
-// Track active tab
-const activeTab = ref('status'); // Default to status tab
-
 // WebSocket connection reference
 const wsConnection = ref(null);
 
-// Status information to display in the Status tab
+// Status information
 const isConnected = ref(false);
 const connectionStatus = ref('Disconnected');
-const messages = ref([]);
 
-// Create a shared state for listeners that will be accessible to both components
+// Create a shared state for listeners that will be accessible to components
 const sharedListeners = ref([]);
 
 // Provide methods to access and update the listeners
@@ -86,11 +51,6 @@ function updateStatus(status) {
   connectionStatus.value = status.status;
 }
 
-// Add message received from WebSocketConnection
-function addMessage(message) {
-  messages.value.push(message);
-}
-
 // Log for debugging
 onMounted(() => {
   console.log('App mounted, WebSocketConnection ref:', wsConnection.value);
@@ -98,26 +58,26 @@ onMounted(() => {
 </script>
 
 <style>
-/* Add your styles here */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
 .status {
   margin: 20px 0;
   padding: 10px;
   background-color: #5e5e5e;
+  color: white;
+  border-radius: 4px;
 }
 
 .status.connected {
   background-color: #4CAF50; /* Green color for connected state */
-}
-
-.messages {
-  margin-top: 5px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  background-color: #5e5e5e;
-}
-
-.messages ul {
-  margin: 0;
-  padding-left: 50px;
 }
 </style>

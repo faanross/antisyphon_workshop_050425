@@ -1,7 +1,7 @@
 <!-- ListenersTable.vue -->
 <template>
   <!-- Listener Counter -->
-  <div class="counter">
+  <div class="counter" :class="{ 'active-listeners': displayedListeners.length > 0 }">
     Total Listeners: <span>{{ displayedListeners.length }}</span>
   </div>
 
@@ -72,17 +72,15 @@ const calculateDuration = (dateString) => {
   try {
     const startTime = new Date(dateString);
     const now = new Date();
-    const diff = now - startTime;
+    const diffMs = now - startTime;
 
-    // Convert to seconds
-    const seconds = Math.floor(diff / 1000);
+    // Convert to hours and minutes
+    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
 
-    // Format as hours, minutes, seconds
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    // Format as HHHH:MM (can go up to 9999 hours)
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   } catch (e) {
     console.error('Error calculating duration:', e);
     return 'Invalid date';
@@ -158,5 +156,10 @@ td[colspan="4"] {
   padding: 15px;
   text-align: center;
   color: #aaa;
+}
+
+.counter.active-listeners {
+  background-color: #8a70d6; /* Purple color similar to the tab we were using */
+  color: white;
 }
 </style>

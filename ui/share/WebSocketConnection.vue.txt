@@ -1,15 +1,8 @@
 <template>
   <div>
-    <!-- Connection Status (this won't be visible due to the parent div being hidden) -->
+    <!-- Connection Status -->
     <div class="status" :class="{ connected: isConnected }">
       WebSocket Status: {{ connectionStatus }}
-    </div>
-
-    <!-- Messages (also not visible) -->
-    <div v-if="messages.length > 0" class="messages">
-      <ul>
-        <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
-      </ul>
     </div>
   </div>
 </template>
@@ -17,8 +10,8 @@
 <script setup>
 import {ref, onMounted, onUnmounted, inject, defineEmits} from 'vue';
 
-// Define emits for status changes and messages
-const emit = defineEmits(['status-change', 'message-received']);
+// Define emits for status changes (removed message-received emit)
+const emit = defineEmits(['status-change']);
 
 // Get the shared listeners state
 const listenersState = inject('listenersState');
@@ -27,7 +20,6 @@ const listenersState = inject('listenersState');
 const socket = ref(null);
 const isConnected = ref(false);
 const connectionStatus = ref('Disconnected');
-const messages = ref([]);
 
 // Connect to WebSocket server
 const connectWebSocket = () => {
@@ -56,12 +48,6 @@ const connectWebSocket = () => {
   // Listen for messages
   socket.value.addEventListener('message', (event) => {
     console.log('Message from server (raw):', event.data);
-
-    // Add the raw message to messages list
-    messages.value.push(event.data);
-
-    // Emit message received
-    emit('message-received', event.data);
 
     // Try to parse as JSON
     try {
@@ -115,11 +101,10 @@ onUnmounted(() => {
   }
 });
 
-// Define what properties are exposed to the parent component
+// Define what properties are exposed to the parent component (removed messages)
 defineExpose({
   isConnected,
-  connectionStatus,
-  messages
+  connectionStatus
 });
 </script>
 
@@ -132,17 +117,5 @@ defineExpose({
 
 .status.connected {
   background-color: #4CAF50; /* Green for connected state */
-}
-
-.messages {
-  margin-top: 5px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  background-color: #5e5e5e;
-}
-
-.messages ul {
-  margin: 0;
-  padding-left: 50px;
 }
 </style>

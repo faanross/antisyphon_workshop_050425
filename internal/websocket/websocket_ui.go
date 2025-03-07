@@ -158,10 +158,3 @@ func StartWebSocketServer() {
 	fmt.Println("WebSocket server is running. You can now connect from the web UI.")
 
 }
-
-// IsClientConnected checks if any WebSocket client is connected
-func IsClientConnected() bool {
-	connMutex.Lock()
-	defer connMutex.Unlock()
-	return len(connections) > 0
-}
