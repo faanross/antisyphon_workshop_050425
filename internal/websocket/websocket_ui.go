@@ -78,6 +78,7 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		log.Printf("Error sending message: %v", err)
 		return
 	}
+
 	// Handle incoming messages in a goroutine
 	go handleConnection(conn)
 

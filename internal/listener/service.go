@@ -32,8 +32,9 @@ func (s *Service) CreateAndStartListener(port string) error {
 	s.manager.AddListener(listener)
 	s.manager.PrintStatus()
 
-	// Notify the WebSocket clients about the new listener
-	err = websocket.SendListenerCreated(listener)
+	// Convert to ListenerInfo and notify the WebSocket clients
+	listenerInfo := listener.ToInfo()
+	err = websocket.SendListenerCreated(listenerInfo)
 	if err != nil {
 		fmt.Printf("Error sending listener creation notification: %v\n", err)
 		// Continue even if notification fails
