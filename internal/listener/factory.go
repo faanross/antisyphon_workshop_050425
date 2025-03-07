@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"antisyphon_workshop_050425/internal/model"
 	"antisyphon_workshop_050425/internal/router"
 	"fmt"
 	"github.com/go-chi/chi/v5"
@@ -48,4 +49,14 @@ func (l *Listener) Start() error {
 	addr := fmt.Sprintf(":%s", l.Port)
 	fmt.Printf("|START| Listener %s serving on %s\n\n", l.ID, addr)
 	return http.ListenAndServe(addr, l.Router)
+}
+
+// ToInfo converts a Listener to a ListenerInfo for sharing with other packages
+func (l *Listener) ToInfo() model.ListenerInfo {
+	return model.ListenerInfo{
+		ID:        l.ID,
+		Port:      l.Port,
+		CreatedAt: l.CreatedAt,
+		Status:    "running",
+	}
 }

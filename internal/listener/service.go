@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"antisyphon_workshop_050425/internal/websocket"
 	"fmt"
 )
 
@@ -30,6 +31,13 @@ func (s *Service) CreateAndStartListener(port string) error {
 	// Add it to the manager
 	s.manager.AddListener(listener)
 	s.manager.PrintStatus()
+
+	// Notify the WebSocket clients about the new listener
+	err = websocket.SendListenerCreated(listener)
+	if err != nil {
+		fmt.Printf("Error sending listener creation notification: %v\n", err)
+		// Continue even if notification fails
+	}
 
 	// Start the listener in a new goroutine
 	go func(l *Listener) {
