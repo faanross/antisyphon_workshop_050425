@@ -31,13 +31,16 @@
 </template>
 
 <script setup>
-import {ref, inject, computed, watch, onMounted} from 'vue';
+import {ref, inject, computed, watch, onMounted, onUnmounted} from 'vue';
 
 // Get the shared listeners state
 const listenersState = inject('listenersState');
 
 // Create a local copy of the listeners data for display
 const localListeners = ref([]);
+
+// Timer reference for auto-updating durations
+const timerRef = ref(null);
 
 // Define a computed property that will always have the latest data
 const displayedListeners = computed(() => {
@@ -50,13 +53,6 @@ watch(() => listenersState.getListeners(), (newListeners) => {
   // Update our local copy with the new data
   localListeners.value = [...newListeners];
 }, {immediate: true, deep: true});
-
-// On component mount, initialize with the current listener data
-onMounted(() => {
-  console.log('ListenersTable mounted, fetching listeners from shared state');
-  localListeners.value = [...listenersState.getListeners()];
-  console.log('Local listeners initialized:', localListeners.value);
-});
 
 // Format date function
 const formatDate = (dateString) => {
@@ -92,4 +88,75 @@ const calculateDuration = (dateString) => {
     return 'Invalid date';
   }
 };
+
+// Function to force update all durations
+const updateAllDurations = () => {
+  // Create a new array reference to trigger reactivity
+  localListeners.value = [...localListeners.value];
+};
+
+// On component mount, initialize with the current listener data and start timer
+onMounted(() => {
+  console.log('ListenersTable mounted, fetching listeners from shared state');
+  localListeners.value = [...listenersState.getListeners()];
+  console.log('Local listeners initialized:', localListeners.value);
+
+  // Start a timer to update durations every second
+  timerRef.value = setInterval(() => {
+    updateAllDurations();
+  }, 1000);
+});
+
+// Clean up the timer when the component is unmounted
+onUnmounted(() => {
+  if (timerRef.value) {
+    clearInterval(timerRef.value);
+  }
+});
 </script>
+
+<style>
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 0.9rem; /* Smaller font size for the table */
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 6px; /* Slightly reduced padding for more compact display */
+  text-align: left;
+}
+
+th {
+  background-color: #5e5e5e;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background-color: #2a2a2a; /* Alternating row colors for better readability */
+}
+
+tr:hover {
+  background-color: #3a3a3a; /* Highlight row on hover */
+}
+
+/* Counter styling */
+.counter {
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #5e5e5e;
+  color: white;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+/* Message when no data is available */
+td[colspan="4"] {
+  padding: 15px;
+  text-align: center;
+  color: #aaa;
+}
+</style>

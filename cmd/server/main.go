@@ -18,12 +18,12 @@ func main() {
 	service := listener.NewService(factory, manager)
 
 	for _, port := range serverPorts {
+		time.Sleep(5 * time.Second)
 		err := service.CreateAndStartListener(port)
 		if err != nil {
 			fmt.Printf("Error creating service: %v\n", err)
 			continue
 		}
-		time.Sleep(3 * time.Second)
 	}
 
 	select {}
