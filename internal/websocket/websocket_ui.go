@@ -78,6 +78,24 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Get all current listeners and send them to the new client
+	listeners, err := GetAllListenersFromService()
+	if err != nil {
+		log.Printf("Error getting listeners: %v", err)
+	} else {
+		// Send the current listener status to just this connection
+		message, err := CreateListenerStatusMessage(listeners)
+		if err != nil {
+			log.Printf("Error creating listener status message: %v", err)
+		} else {
+			// Send the message directly to this connection, not broadcasting
+			err = conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Printf("Error sending initial listener status: %v", err)
+			}
+		}
+	}
+
 	// Handle incoming messages in a goroutine
 	go handleConnection(conn)
 

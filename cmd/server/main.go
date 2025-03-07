@@ -2,6 +2,7 @@ package main
 
 import (
 	"antisyphon_workshop_050425/internal/listener"
+	"antisyphon_workshop_050425/internal/model"
 	"antisyphon_workshop_050425/internal/websocket"
 	"fmt"
 	"time"
@@ -16,6 +17,9 @@ func main() {
 	factory := listener.NewListenerFactory()
 	manager := listener.NewManager()
 	service := listener.NewService(factory, manager)
+
+	// create global reference
+	model.SetServiceProvider(service)
 
 	for _, port := range serverPorts {
 		time.Sleep(5 * time.Second)

@@ -67,3 +67,26 @@ func SendListenerStatus(listeners []model.ListenerInfo) error {
 	BroadcastMessage(messageBytes)
 	return nil
 }
+
+// GetAllListenersFromService gets all listeners from the service
+func GetAllListenersFromService() ([]model.ListenerInfo, error) {
+	// Get the service reference
+	service := model.GetServiceProvider()
+	if service == nil {
+		return nil, fmt.Errorf("listener service not initialized")
+	}
+
+	// Get all listeners
+	return service.GetAllListeners(), nil
+}
+
+// CreateListenerStatusMessage creates a listener status message without sending it
+func CreateListenerStatusMessage(listeners []model.ListenerInfo) ([]byte, error) {
+	message := WebSocketMessage{
+		Type:    TypeListenerStatus,
+		Payload: listeners,
+		Time:    time.Now(),
+	}
+
+	return json.Marshal(message)
+}

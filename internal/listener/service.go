@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"antisyphon_workshop_050425/internal/model"
 	"antisyphon_workshop_050425/internal/websocket"
 	"fmt"
 )
@@ -50,4 +51,9 @@ func (s *Service) CreateAndStartListener(port string) error {
 	}(listener)
 
 	return nil
+}
+
+// GetAllListeners returns information about all managed listeners
+func (s *Service) GetAllListeners() []model.ListenerInfo {
+	return s.manager.GetAllListenersInfo()
 }
