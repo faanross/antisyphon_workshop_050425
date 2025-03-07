@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"antisyphon_workshop_050425/internal/model"
 	"fmt"
 	"sync"
 )
@@ -40,4 +41,19 @@ func (m *Manager) PrintStatus() {
 		}
 	}
 	fmt.Printf("\n")
+}
+
+// GetAllListenersInfo returns information about all managed listeners
+// in a format suitable for sharing with other packages
+func (m *Manager) GetAllListenersInfo() []model.ListenerInfo {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	// Create a slice of ListenerInfo objects
+	info := make([]model.ListenerInfo, 0, len(m.listeners))
+	for _, listener := range m.listeners {
+		info = append(info, listener.ToInfo())
+	}
+
+	return info
 }

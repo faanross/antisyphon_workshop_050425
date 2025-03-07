@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"antisyphon_workshop_050425/internal/listener"
+	"antisyphon_workshop_050425/internal/model"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -30,13 +30,7 @@ type ListenerInfo struct {
 }
 
 // SendListenerCreated sends a notification that a new listener was created
-func SendListenerCreated(l *listener.Listener) error {
-	info := ListenerInfo{
-		ID:        l.ID,
-		Port:      l.Port,
-		CreatedAt: l.CreatedAt,
-	}
-
+func SendListenerCreated(info model.ListenerInfo) error {
 	message := WebSocketMessage{
 		Type:    TypeListenerCreated,
 		Payload: info,
@@ -54,20 +48,10 @@ func SendListenerCreated(l *listener.Listener) error {
 }
 
 // SendListenerStatus sends the current status of all listeners
-func SendListenerStatus(listeners map[string]*listener.Listener) error {
-	// Convert the map to a slice of ListenerInfo
-	listenerInfos := make([]ListenerInfo, 0, len(listeners))
-	for _, l := range listeners {
-		listenerInfos = append(listenerInfos, ListenerInfo{
-			ID:        l.ID,
-			Port:      l.Port,
-			CreatedAt: l.CreatedAt,
-		})
-	}
-
+func SendListenerStatus(listeners []model.ListenerInfo) error {
 	message := WebSocketMessage{
 		Type:    TypeListenerStatus,
-		Payload: listenerInfos,
+		Payload: listeners,
 		Time:    time.Now(),
 	}
 
