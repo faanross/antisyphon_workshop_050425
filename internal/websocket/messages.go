@@ -46,7 +46,20 @@ func SendListenerCreated(info model.ListenerInfo) error {
 
 	fmt.Printf("Marshaled message: %s\n", string(messageBytes))
 
-	// Send to the broadcaster
+	// Try to send the message, with retries if no clients are connected
+	maxRetries := 5
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if IsClientConnected() {
+			BroadcastMessage(messageBytes)
+			return nil
+		}
+
+		fmt.Printf("No clients connected, retrying in 1 second (attempt %d/%d)\n",
+			attempt+1, maxRetries)
+		time.Sleep(1 * time.Second)
+	}
+
+	// Send it anyway, it will be queued in the message buffer
 	BroadcastMessage(messageBytes)
 	return nil
 }
