@@ -1,11 +1,11 @@
 <template>
   <div>
-    <!-- Connection Status -->
+    <!-- Connection Status (this won't be visible due to the parent div being hidden) -->
     <div class="status" :class="{ connected: isConnected }">
       WebSocket Status: {{ connectionStatus }}
     </div>
 
-    <!-- Messages received from the server will be shown here -->
+    <!-- Messages (also not visible) -->
     <div v-if="messages.length > 0" class="messages">
       <ul>
         <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
@@ -15,7 +15,13 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue';
+import {ref, onMounted, onUnmounted, inject, defineEmits} from 'vue';
+
+// Define emits for status changes and messages
+const emit = defineEmits(['status-change', 'message-received']);
+
+// Get the shared listeners state
+const listenersState = inject('listenersState');
 
 // WebSocket connection
 const socket = ref(null);
@@ -40,14 +46,41 @@ const connectWebSocket = () => {
     isConnected.value = true;
     connectionStatus.value = 'Connected';
 
+    // Emit status change
+    emit('status-change', {connected: true, status: 'Connected'});
+
     // Send a message to the server
     socket.value.send('Hello from Vue client!');
   });
 
   // Listen for messages
   socket.value.addEventListener('message', (event) => {
-    console.log('Message from server:', event.data);
+    console.log('Message from server (raw):', event.data);
+
+    // Add the raw message to messages list
     messages.value.push(event.data);
+
+    // Emit message received
+    emit('message-received', event.data);
+
+    // Try to parse as JSON
+    try {
+      const data = JSON.parse(event.data);
+      console.log('Parsed message data:', data);
+
+      // Handle different message types
+      if (data.type === 'listener_created') {
+        // Use the shared state to add the new listener
+        listenersState.addListener(data.payload);
+        console.log('New listener added, current listeners:', listenersState.getListeners());
+      } else if (data.type === 'listener_status') {
+        // Use the shared state to update all listeners
+        listenersState.updateListeners(data.payload);
+        console.log('Updated listeners list:', listenersState.getListeners());
+      }
+    } catch (e) {
+      console.log('Received non-JSON message:', e.message);
+    }
   });
 
   // Connection closed
@@ -55,12 +88,18 @@ const connectWebSocket = () => {
     console.log('Disconnected from WebSocket server');
     isConnected.value = false;
     connectionStatus.value = 'Disconnected';
+
+    // Emit status change
+    emit('status-change', {connected: false, status: 'Disconnected'});
   });
 
   // Connection error
   socket.value.addEventListener('error', (event) => {
     console.error('WebSocket error:', event);
     connectionStatus.value = 'Error';
+
+    // Emit status change
+    emit('status-change', {connected: false, status: 'Error'});
   });
 };
 
@@ -75,6 +114,13 @@ onUnmounted(() => {
     socket.value.close();
   }
 });
+
+// Define what properties are exposed to the parent component
+defineExpose({
+  isConnected,
+  connectionStatus,
+  messages
+});
 </script>
 
 <style scoped>
@@ -85,7 +131,7 @@ onUnmounted(() => {
 }
 
 .status.connected {
-  background-color: #5e5e5e;
+  background-color: #4CAF50; /* Green for connected state */
 }
 
 .messages {

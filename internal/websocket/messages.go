@@ -31,6 +31,8 @@ type ListenerInfo struct {
 
 // SendListenerCreated sends a notification that a new listener was created
 func SendListenerCreated(info model.ListenerInfo) error {
+	fmt.Printf("Sending listener created notification for %s\n", info.ID)
+
 	message := WebSocketMessage{
 		Type:    TypeListenerCreated,
 		Payload: info,
@@ -41,6 +43,8 @@ func SendListenerCreated(info model.ListenerInfo) error {
 	if err != nil {
 		return fmt.Errorf("error marshaling listener info: %w", err)
 	}
+
+	fmt.Printf("Marshaled message: %s\n", string(messageBytes))
 
 	// Send to the broadcaster
 	BroadcastMessage(messageBytes)

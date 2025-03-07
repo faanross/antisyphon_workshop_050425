@@ -62,7 +62,6 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		log.Printf("Failed to upgrade connection to WebSocket: %v", err)
 		return
 	}
-	defer conn.Close()
 
 	// Register the new connection
 	connMutex.Lock()
@@ -118,25 +117,29 @@ func removeConnection(conn *websocket.Conn) {
 	log.Println("WebSocket connection closed")
 }
 
-// broadcastMessages sends messages from the buffer to all connected clients
+// BroadcastMessage sends a message to all connected WebSocket clients
+func BroadcastMessage(message []byte) {
+	fmt.Printf("Broadcasting message: %s\n", string(message))
+	messageBuffer <- message
+}
+
+// In the broadcastMessages function:
 func (s *WebSocketServer) broadcastMessages() {
 	for message := range messageBuffer {
 		connMutex.Lock()
+		fmt.Printf("Broadcasting to %d clients\n", len(connections))
 		for conn := range connections {
 			err := conn.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
 				log.Printf("Error broadcasting message: %v", err)
 				conn.Close()
 				delete(connections, conn)
+			} else {
+				fmt.Println("Message sent successfully to a client")
 			}
 		}
 		connMutex.Unlock()
 	}
-}
-
-// BroadcastMessage sends a message to all connected WebSocket clients
-func BroadcastMessage(message []byte) {
-	messageBuffer <- message
 }
 
 func StartWebSocketServer() {
